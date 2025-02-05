@@ -1,0 +1,101 @@
+---
+title: "😊 Hello Thursday"
+author: "Blair Wang"
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    theme: flatly
+    code-fold: true
+---
+
+## Introduction
+
+Hello world something something
+
+
+## Overview
+
+```{mermaid}
+flowchart LR
+  x1[📜 CSV file]
+  x2[🧹 Cleanup columns]
+  x3[💾 Save CSV file]
+  x4[🎲 Preview random 10 rows]
+  x5[🕵 Look for coinciding text values]
+  x6[🧮 Aggregate data]
+  x7[📊 Visualise data]
+  x1 --> x2
+  x2 --> x4
+  x2 --> x5
+  x2 --> x6
+  x6 --> x7
+  
+  x2 --> x3
+```
+
+
+Blah blah blah
+
+## Running Code
+
+When you click the **Render** _button_ a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+You can add options to executable code like this 
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+## Step 1. Open the CSV file
+
+```{r}
+library(readr)
+library(dplyr)
+
+x <- read_csv("./datasets/DHA79.20250129T140111.csv")
+print(x)
+```
+
+## Step 2. Inspect first 10 rows
+
+
+
+
+
+
+
+Now I will do some other stuff!
+
+Yay!
+
+Etc
+
+Etc
+
+```{r}
+# Rename columns and then print again
+x <- x %>% rename(statistic_label = "Statistic Label")
+x <- x %>% rename(age_group = "Age Group")
+
+sampled_data <- sample_n(x, 10)
+print(sampled_data)
+
+# Below code was adapted from Microsoft Copilot, 30 Jan. 2025
+# Prompt: "How do I only show the following columns:  - column_A - column_C - column_F"
+selected_columns <- select(sampled_data, statistic_label, age_group, ISHMT)
+print(selected_columns)
+
+```
+
+We have therefore discovered that ISHMT = International shortlist for hospital morbidity tabulation (ISHMT). For more info see [this link here](https://nhwstat.org/methods/hospital-data-definitions).
+
+
+## Step 3. Inspect random 10 rows
+
+## Step 4. What is ISHMT?
+
+

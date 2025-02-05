@@ -1,0 +1,65 @@
+---
+title: "notebook"
+format:
+  html:
+    toc: true
+    embed-resources: true
+    theme: flatly
+    code-fold: true
+    code-summary: "What does the code say? 🦊"
+---
+
+For more themes: https://quarto.org/docs/output-formats/html-themes.html
+
+For more information about diagrams: https://quarto.org/docs/authoring/diagrams.html
+
+## Overview
+
+```{mermaid}
+flowchart LR
+  x1[📜 CSV file]
+  x2[🧹 Cleanup columns]
+  x3[💾 Save CSV file]
+  x4[🎲 Preview random 10 rows]
+  x5[🕵 Look for coinciding text values]
+  x6[🧮 Aggregate data]
+  x7[📊 Visualise data]
+  x1 --> x2
+  x2 --> x4
+  x2 --> x5
+  x2 --> x6
+  x6 --> x7
+  
+  x2 --> x3
+```
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(readr)
+library(dplyr)
+
+cso_dha79 <- read_csv("./datasets/DHA79.20250129T140111.csv")
+print(cso_dha79)
+
+# Rename columns
+cso_dha79 <- cso_dha79 %>% rename(age_group = "Age Group")
+cso_dha79 <- cso_dha79 %>% rename(tlist_a1 = "TLIST(A1)")
+
+# Random sample
+random_sample <- cso_dha79 %>% sample_n(10)
+print(random_sample)
+
+# Notes
+# ISHMT = International Shortlist for Hospital Morbidity Tabulation
+
+# Observation: C02076V02508 matches with age_group
+# distinct_rows <- cso_dha79 %>% distinct(C02076V02508, age_group)
+# print(distinct_rows)
+
+# Observation: C02855V03433 matches with ISHMT
+distinct_rows <- cso_dha79 %>% distinct(C02855V03433, ISHMT)
+print(distinct_rows)
+```
