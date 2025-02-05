@@ -38,28 +38,34 @@ flowchart LR
 When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
 
 ```{r}
-library(readr)
-library(dplyr)
+library(tidyverse)
+library(plotly)
 
-cso_dha79 <- read_csv("./datasets/DHA79.20250129T140111.csv")
+cso_dha79 <- read_csv("../../datasets/DHA79.20250129T140111.csv")
 print(cso_dha79)
 
 # Rename columns
+cso_dha79 <- cso_dha79 %>% rename(px_type = "Statistic Label")
+cso_dha79 <- cso_dha79 %>% rename(calendar_year = "Year")
 cso_dha79 <- cso_dha79 %>% rename(age_group = "Age Group")
-cso_dha79 <- cso_dha79 %>% rename(tlist_a1 = "TLIST(A1)")
+cso_dha79 <- cso_dha79 %>% rename(medical_ishmt = "ISHMT")
+cso_dha79 <- cso_dha79 %>% rename(num_cases = "VALUE")
 
-# Random sample
-random_sample <- cso_dha79 %>% sample_n(10)
-print(random_sample)
+# Adapted from Microsoft Copilot AI
+cso_dha79_selectedcols <- cso_dha79 %>% select(px_type, calendar_year, age_group, medical_ishmt, num_cases)
+cso_dha79_selectedcols <- cso_dha79_selectedcols %>% mutate(num_cases = replace_na(num_cases, 0))
 
+# Data for plotly
+data_for_plotly <- cso_dha79_selectedcols %>%
+  group_by(px_type, calendar_year) %>%
+  summarize(
+    total_num_cases = sum(num_cases)
+  )
+print(data_for_plotly)
+plot <- data_for_plotly %>%
+  plot_ly(y = ~total_num_cases, type = "box", name = ~calendar_year)
+
+plot
 # Notes
 # ISHMT = International Shortlist for Hospital Morbidity Tabulation
-
-# Observation: C02076V02508 matches with age_group
-# distinct_rows <- cso_dha79 %>% distinct(C02076V02508, age_group)
-# print(distinct_rows)
-
-# Observation: C02855V03433 matches with ISHMT
-distinct_rows <- cso_dha79 %>% distinct(C02855V03433, ISHMT)
-print(distinct_rows)
 ```
