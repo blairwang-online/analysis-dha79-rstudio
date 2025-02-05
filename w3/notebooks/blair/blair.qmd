@@ -1,12 +1,12 @@
 ---
-title: "notebook"
+title: "Blair's Notebook"
+author: "Blair Wang"
 format:
   html:
     toc: true
     embed-resources: true
     theme: flatly
     code-fold: true
-    code-summary: "What does the code say? 🦊"
 ---
 
 For more themes: https://quarto.org/docs/output-formats/html-themes.html
