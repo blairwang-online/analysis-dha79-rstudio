@@ -35,67 +35,131 @@ flowchart LR
 ```
 
 
-Blah blah blah
+## Step 1. Load the libraries
 
-## Running Code
 
-When you click the **Render** _button_ a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-You can add options to executable code like this 
-
-```{r}
-#| echo: false
-2 * 2
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(plotly)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Step 2. Open the CSV file
 
-## Step 1. Open the CSV file
-
-```{r}
-library(readr)
-library(dplyr)
-
-x <- read_csv("./datasets/DHA79.20250129T140111.csv")
-print(x)
-```
-
-## Step 2. Inspect first 10 rows
-
-
-
-
-
-
-
-Now I will do some other stuff!
-
-Yay!
-
-Etc
-
-Etc
+Please note that in the code, we carefully identify each of the data types.
 
 ```{r}
-# Rename columns and then print again
-x <- x %>% rename(statistic_label = "Statistic Label")
-x <- x %>% rename(age_group = "Age Group")
-
-sampled_data <- sample_n(x, 10)
-print(sampled_data)
-
-# Below code was adapted from Microsoft Copilot, 30 Jan. 2025
-# Prompt: "How do I only show the following columns:  - column_A - column_C - column_F"
-selected_columns <- select(sampled_data, statistic_label, age_group, ISHMT)
-print(selected_columns)
-
+cso_dha79 <- read_csv("../../datasets/DHA79.20250129T140111.csv", col_types = list (
+  `STATISTIC` = col_character(),
+  `Statistic Label` = col_character(),
+  `TLIST(A1)` = col_integer(),
+  `Year` = col_integer(),
+  `C02076V02508` = col_character(),
+  `Age Group` = col_character(),
+  `C02199V02655` = col_character(),
+  `Sex` = col_character(),
+  `C02855V03433` = col_character(),
+  `ISHMT` = col_character(),
+  `UNIT` = col_character(),
+  `VALUE` = col_integer()
+))
+print(cso_dha79)
 ```
 
-We have therefore discovered that ISHMT = International shortlist for hospital morbidity tabulation (ISHMT). For more info see [this link here](https://nhwstat.org/methods/hospital-data-definitions).
+## Step 3. Clean up the dataset
+
+In this step, we:
+
+1. Rename the columns, so they are easier to work with programmatically;
+2. Select only the columns we need for the purpose of this analysis;
+3. Handle NA values
+
+```{r}
+# Rename the columns, so they are easier to work with programmatically
+cso_dha79 <- cso_dha79 %>% 
+  rename(px_type = "Statistic Label") %>%
+  rename(calendar_year = "Year") %>%
+  rename(age_group = "Age Group") %>%
+  rename(medical_sex = "Sex") %>%
+  rename(medical_ishmt = "ISHMT") %>%
+  rename(num_cases = "VALUE")
+
+# Select only the columns we need for the purpose of this analysis
+cso_dha79_selectedcols <- cso_dha79 %>% select(px_type, calendar_year, age_group, medical_ishmt, medical_sex, num_cases)
+
+# Handle NA values
+cso_dha79_selectedcols <- cso_dha79_selectedcols %>% mutate(num_cases = replace_na(num_cases, 0))
+```
+
+## Step 4. Handle aggregations in the datset
+
+The dataset contains some rows which aggregate the data of other rows (!):
+
+- Where `medical_ishmt` = _"All causes (A00-Z99 (excl. V, W, X & Y ))"_
+- Where `medical_ishmt` = _"All causes excluding dialysis daycases (A00-Z99 (excl. Z49.1 & Z49.2, V, W, X & Y)) ))"_
+- Where `medical_sex` = _"Both sexes"_
+- Where `age_group` = _"All ages"_
+
+These will mess up our own aggregation process, so we will need to handle them.
+
+**Note:** ISHMT = International shortlist for hospital morbidity tabulation (ISHMT). For more info see [this link here](https://nhwstat.org/methods/hospital-data-definitions).
+
+```{r}
+cso_dha79_selectedcols <- cso_dha79_selectedcols %>%
+  filter(medical_ishmt != "All causes (A00-Z99 (excl. V, W, X & Y ))") %>%
+  filter(medical_ishmt != "All causes excluding dialysis daycases (A00-Z99 (excl. Z49.1 & Z49.2, V, W, X & Y)) ))") %>%
+  filter(medical_sex != "Both sexes") %>%
+  filter(age_group != "All ages")
+```
+
+## Step 5. Plot the data using Plotly
+
+::: {.callout-tip}
+## gt?
+
+Have a look at the part that starts with `library(gt)`. This is an alternative to `print(data_for_plotly)`.
+:::
 
 
-## Step 3. Inspect random 10 rows
+Prepare the data for plotly:
 
-## Step 4. What is ISHMT?
+```{r}
+# Data for plotly
+data_for_plotly <- cso_dha79_selectedcols %>%
+  group_by(age_group, calendar_year) %>%
+  summarize(
+    total_num_cases = sum(num_cases),
+    .groups = "keep"
+  ) %>%
+  ungroup()
+
+library(gt)
+data_for_plotly %>%
+  gt() %>%
+  fmt_number(
+    columns = total_num_cases,
+    sep_mark = ",",
+    decimals = 0
+  ) %>%
+  opt_table_font(
+    size = "9pt",
+    font = list(
+      "Courier",
+      "monospace"
+    )
+  )
+# print(data_for_plotly)
+```
 
 
+Show the plot:
+
+```{r}
+plot <- data_for_plotly %>%
+  plot_ly(
+    x = ~total_num_cases,
+    type = "box",
+    name = ~age_group
+  )
+
+plot
+```
